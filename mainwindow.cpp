@@ -21,7 +21,7 @@ MainWindow::~MainWindow()
 /*------------------slots--------------------*/
 void MainWindow::ServerNewConnection(){
     //通过nextPendingConnection()函数获得连接客户端的SOCKET套接字
-    mp_TCPSocket = mp_TCPServer->nextPendingConnection(); //
+    QTcpSocket *mp_TCPSocket = mp_TCPServer->nextPendingConnection(); //
     if(!mp_TCPSocket)
     {
         QMessageBox::information(this, "QT网络通信", "未正确获取客户端连接！");
@@ -29,28 +29,42 @@ void MainWindow::ServerNewConnection(){
     }
     else
     {
-        QMessageBox::information(this, "QT网络通信", "成功接受客户端的连接");
+        //QMessageBox::information(this, "QT网络通信", "成功接受客户端的连接");
+        ui->m_recvDataTextEdit->append("成功接受客户端");
+        ui->m_recvDataTextEdit->append(QString("%1").arg(mp_TCPSocketList.count()));
         //QT通过信号SIGNAL:readyRead()来判断是否有数据传入
         connect(mp_TCPSocket, SIGNAL(readyRead()), this, SLOT(ServerReadData()));
         connect(mp_TCPSocket, SIGNAL(disconnected()), this, SLOT(sServerDisConnection()));
+        mp_TCPSocketList.append(mp_TCPSocket);
+
     }
 }
 //接收数据
 void MainWindow::ServerReadData(){
     char buffer[1024] = {0};
-    mp_TCPSocket->read(buffer, 1024);
-    if( strlen(buffer) > 0)
+    QTcpSocket *mp_TCPSocket;
+    for(int i=0; i<mp_TCPSocketList.count(); i++)  //对每一个连接的客户端,接收数据
     {
-        QString newMsg = buffer;
-        ui->m_recvDataTextEdit->append(newMsg);
-        //广播信息
-        if(ui->m_recvDataTextEdit->toPlainText().isEmpty())
+        mp_TCPSocket = mp_TCPSocketList.at(i);
+        buffer[1024] = {0};
+        mp_TCPSocket->read(buffer, 1024);
+        if(strlen(buffer) > 0)
         {
-            //QMessageBox::information(this, "QT网络通信", "发送数据为空，请输入数据");
-            return;
+            QString newMsg = buffer;
+            ui->m_recvDataTextEdit->append(newMsg);
+            break;
         }
-        //char sendMsgChar[1024] = {0};
-        strcpy_s(buffer, ui->m_recvDataTextEdit->toPlainText().toStdString().c_str());
+        else
+        {
+            //QMessageBox::information(this, "QT网络通信", QString("未正确接收数据%1").arg(i));
+            //return;
+        }
+    }
+
+    for(int i=0; i<mp_TCPSocketList.count(); i++)
+    {
+        //广播信息
+        mp_TCPSocket = mp_TCPSocketList.at(i);
         if(mp_TCPSocket->isValid())
         {
             int sendRe = mp_TCPSocket->write(buffer, strlen(buffer));
@@ -63,11 +77,6 @@ void MainWindow::ServerReadData(){
         {
             QMessageBox::information(this, "QT网络通信", "套接字无效！");
         }
-    }
-    else
-    {
-        QMessageBox::information(this, "QT网络通信", "未正确接收数据");
-        return;
     }
 }
 //初始化socket
@@ -89,7 +98,10 @@ void MainWindow::OnBtnInitSocket(){
 }
 //发送数据
 void MainWindow::OnBtnSendData(){
-    char sendMsgChar[1024] = {0};
+    for(int i=0; i<mp_TCPSocketList.count(); i++)  //对每一个连接的客户端
+    {
+        QTcpSocket *mp_TCPSocket = mp_TCPSocketList.at(i);
+        char sendMsgChar[1024] = {0};
         QString sendMsg = ui->m_recvDataTextEdit->toPlainText();
         if(sendMsg.isEmpty())
         {
@@ -109,9 +121,11 @@ void MainWindow::OnBtnSendData(){
         {
             QMessageBox::information(this, "QT网络通信", "套接字无效！");
         }
+    }
 }
 //连接断开提醒
 void MainWindow::sServerDisConnection(){
-    QMessageBox::information(this, "QT网络通信", "与客户端的连接断开");
+    //QMessageBox::information(this, "QT网络通信", "与客户端的连接断开");
+    ui->m_recvDataTextEdit->append("与客户端的连接断开");
     return;
 }

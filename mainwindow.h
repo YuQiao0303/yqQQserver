@@ -20,7 +20,8 @@ public:
 private:
     Ui::MainWindow *ui;
     QTcpServer *mp_TCPServer;
-    QTcpSocket *mp_TCPSocket;
+    //QTcpSocket *mp_TCPSocket;
+    QList<QTcpSocket *> mp_TCPSocketList;
 
 private slots:
     void OnBtnInitSocket();
