@@ -43,6 +43,7 @@ void MainWindow::ServerNewConnection(){
 void MainWindow::ServerReadData(){
     char buffer[1024] = {0};
     QTcpSocket *mp_TCPSocket;
+    int MsgSender=-1; //用于保存发送该信息的客户端在mp_TCPSocketList中的序号
     for(int i=0; i<mp_TCPSocketList.count(); i++)  //对每一个连接的客户端,接收数据
     {
         mp_TCPSocket = mp_TCPSocketList.at(i);
@@ -52,6 +53,7 @@ void MainWindow::ServerReadData(){
         {
             QString newMsg = buffer;
             ui->m_recvDataTextEdit->append(newMsg);
+            MsgSender=i;  //标记发送该信息的客户端在mp_TCPSocketList中的序号
             break;
         }
         else
@@ -64,6 +66,7 @@ void MainWindow::ServerReadData(){
     for(int i=0; i<mp_TCPSocketList.count(); i++)
     {
         //广播信息
+        if(i==MsgSender) continue;
         mp_TCPSocket = mp_TCPSocketList.at(i);
         if(mp_TCPSocket->isValid())
         {
