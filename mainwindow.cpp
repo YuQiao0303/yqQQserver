@@ -36,6 +36,26 @@ void MainWindow::ServerNewConnection(){
         connect(mp_TCPSocket, SIGNAL(readyRead()), this, SLOT(ServerReadData()));
         connect(mp_TCPSocket, SIGNAL(disconnected()), this, SLOT(sServerDisConnection()));
         mp_TCPSocketList.append(mp_TCPSocket);
+        //广而告之
+        for(int i=0; i<mp_TCPSocketList.count(); i++)  //对每一个连接的客户端
+        {
+            QTcpSocket *mp_TCPSocket = mp_TCPSocketList.at(i);
+            char sendMsgChar[1024] = {0};
+            QString sendMsg = QString("系统通知：1人上线，当前人数：%1").arg(mp_TCPSocketList.count());
+            strcpy_s(sendMsgChar, sendMsg.toStdString().c_str());
+            if(mp_TCPSocket->isValid())
+            {
+                int sendRe = mp_TCPSocket->write(sendMsgChar, strlen(sendMsgChar));
+                if( -1 == sendRe)
+                {
+                    QMessageBox::information(this, "QT网络通信", "服务端发送数据失败！");
+                }
+            }
+            else
+            {
+                QMessageBox::information(this, "QT网络通信", "套接字无效！");
+            }
+        }
 
     }
 }
@@ -105,8 +125,8 @@ void MainWindow::OnBtnSendData(){
     {
         QTcpSocket *mp_TCPSocket = mp_TCPSocketList.at(i);
         char sendMsgChar[1024] = {0};
-        QString sendMsg = ui->m_recvDataTextEdit->toPlainText();
-        if(sendMsg.isEmpty())
+        QString sendMsg = "系统通知："+ui->m_inputTextEdit->toPlainText();
+        if(ui->m_inputTextEdit->toPlainText().isEmpty())
         {
             QMessageBox::information(this, "QT网络通信", "发送数据为空，请输入数据");
             return;
@@ -128,7 +148,28 @@ void MainWindow::OnBtnSendData(){
 }
 //连接断开提醒
 void MainWindow::sServerDisConnection(){
-    //QMessageBox::information(this, "QT网络通信", "与客户端的连接断开");
-    ui->m_recvDataTextEdit->append("与客户端的连接断开");
+    int offline = -1;
+    ui->m_recvDataTextEdit->append(QString("1人下线，剩余人数：%1").arg(mp_TCPSocketList.count()-1));
+    for(int i=0; i<mp_TCPSocketList.count(); i++)  //对每一个连接的客户端
+    {
+        QTcpSocket *mp_TCPSocket = mp_TCPSocketList.at(i);
+        char sendMsgChar[1024] = {0};
+        QString sendMsg = QString("系统通知：1人下线，剩余人数：%1").arg(mp_TCPSocketList.count()-1);
+        strcpy_s(sendMsgChar, sendMsg.toStdString().c_str());
+        if(mp_TCPSocket->isValid())
+        {
+            int sendRe = mp_TCPSocket->write(sendMsgChar, strlen(sendMsgChar));
+            if( -1 == sendRe)
+            {
+                //下线的就是这个人
+                offline = i;
+            }
+        }
+        else
+        {
+            QMessageBox::information(this, "QT网络通信", "套接字无效！");
+        }
+    }
+    mp_TCPSocketList.removeAt(offline);
     return;
 }
