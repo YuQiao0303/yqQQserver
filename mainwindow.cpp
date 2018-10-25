@@ -41,7 +41,7 @@ void MainWindow::ServerNewConnection(){
         {
             QTcpSocket *mp_TCPSocket = mp_TCPSocketList.at(i);
             char sendMsgChar[1024] = {0};
-            QString sendMsg = QString("系统通知：1人上线，当前人数：%1").arg(mp_TCPSocketList.count());
+            QString sendMsg = QString("<font color=\"blue\">系统通知：1人上线，当前人数：%1</font>").arg(mp_TCPSocketList.count());
             strcpy_s(sendMsgChar, sendMsg.toStdString().c_str());
             if(mp_TCPSocket->isValid())
             {
@@ -125,7 +125,7 @@ void MainWindow::OnBtnSendData(){
     {
         QTcpSocket *mp_TCPSocket = mp_TCPSocketList.at(i);
         char sendMsgChar[1024] = {0};
-        QString sendMsg = "系统通知："+ui->m_inputTextEdit->toPlainText();
+        QString sendMsg = "<font color=\"blue\">系统通知："+ui->m_inputTextEdit->toPlainText()+"</font>";
         if(ui->m_inputTextEdit->toPlainText().isEmpty())
         {
             QMessageBox::information(this, "QT网络通信", "发送数据为空，请输入数据");
@@ -154,7 +154,7 @@ void MainWindow::sServerDisConnection(){
     {
         QTcpSocket *mp_TCPSocket = mp_TCPSocketList.at(i);
         char sendMsgChar[1024] = {0};
-        QString sendMsg = QString("系统通知：1人下线，剩余人数：%1").arg(mp_TCPSocketList.count()-1);
+        QString sendMsg = QString("<font color=\"blue\">系统通知：1人下线，剩余人数：%1</font>").arg(mp_TCPSocketList.count()-1);
         strcpy_s(sendMsgChar, sendMsg.toStdString().c_str());
         if(mp_TCPSocket->isValid())
         {
